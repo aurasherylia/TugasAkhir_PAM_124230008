@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+
+	<key>CFBundleDisplayName</key>
+	<string>AorMed+</string>
+
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+
+	<key>CFBundleName</key>
+	<string>aormed</string>
+
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+
+	<!-- ✅ Splash Screen -->
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+
+	<!-- ✅ Background & Notification support -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
+
+	<!-- 🧠 Deskripsi izin -->
+	<key>NSUserNotificationUsageDescription</key>
+	<string>AorMed+ ingin mengirimkan notifikasi kesehatan untuk kamu 💙</string>
+
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Aplikasi memerlukan lokasi Anda untuk menampilkan dokter terdekat.</string>
+
+	<!-- ✅ Izin kamera, FaceID, mikrofon, dan galeri -->
+	<key>NSCameraUsageDescription</key>
+	<string>Aplikasi ini memerlukan akses kamera untuk verifikasi wajah Anda.</string>
+
+	<key>NSFaceIDUsageDescription</key>
+	<string>Aplikasi ini menggunakan Face ID untuk keamanan login Anda.</string>
+
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Aplikasi ini memerlukan akses galeri untuk mengambil atau menyimpan foto wajah.</string>
+
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Diperlukan untuk perekaman media (opsional untuk video call dokter).</string>
+
+	<!-- 🌐 Allow any network (untuk load model dari asset atau API lokal) -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+
+	<!-- ✅ Orientasi layar -->
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+</dict>
+</plist>

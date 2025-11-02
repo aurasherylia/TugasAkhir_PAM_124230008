@@ -1,0 +1,72 @@
+platform :ios, '15.0'
+
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+source 'https://cdn.cocoapods.org/'
+
+project 'Runner', {
+  'Debug' => :debug,
+  'Profile' => :release,
+  'Release' => :release,
+}
+
+# Fungsi untuk membaca lokasi Flutter SDK
+def flutter_root
+  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+  unless File.exist?(generated_xcode_build_settings_path)
+    raise "#{generated_xcode_build_settings_path} must exist. Jalankan 'flutter pub get' dulu."
+  end
+
+  File.foreach(generated_xcode_build_settings_path) do |line|
+    matches = line.match(/FLUTTER_ROOT\=(.*)/)
+    return matches[1].strip if matches
+  end
+  raise "FLUTTER_ROOT tidak ditemukan. Coba hapus Generated.xcconfig dan jalankan ulang 'flutter pub get'."
+end
+
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+flutter_ios_podfile_setup
+
+# ✅ Hook sebelum install pods
+# Mengganti semua dependensi TensorFlowLiteSwift dengan TensorFlowLiteC agar tidak clone dari GitHub
+pre_install do |installer|
+  installer.pod_targets.each do |pod|
+    if pod.name == 'TensorFlowLiteSwift'
+      puts "🔧 Redirecting TensorFlowLiteSwift → TensorFlowLiteC"
+      pod.instance_variable_set(:@name, 'TensorFlowLiteC')
+    end
+  end
+end
+
+target 'Runner' do
+  use_frameworks!
+  use_modular_headers!
+
+  # ✅ Gunakan hanya TensorFlowLiteC
+  pod 'TensorFlowLiteC', '2.12.0'
+
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+
+  target 'RunnerTests' do
+    inherit! :search_paths
+  end
+end
+
+# ✅ Bagian post_install aman dan hanya memeriksa TensorFlowLiteSwift di lockfile
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
+  end
+
+  # Cek apakah TensorFlowLiteSwift masih muncul di Podfile.lock
+  lockfile_path = File.join(__dir__, 'Podfile.lock')
+  if File.exist?(lockfile_path)
+    File.foreach(lockfile_path) do |line|
+      if line.include?('TensorFlowLiteSwift')
+        puts "⚠️ WARNING: TensorFlowLiteSwift masih muncul di Podfile.lock — pastikan hanya pakai TensorFlowLiteC."
+      end
+    end
+  else
+    puts "ℹ️ Podfile.lock belum ada, akan dibuat setelah pod install."
+  end
+end
