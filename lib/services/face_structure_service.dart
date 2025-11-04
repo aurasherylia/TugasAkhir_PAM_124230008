@@ -2,31 +2,30 @@ import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 
-/// Face recognition berbasis struktur wajah + liveness (tanpa embeddings & tanpa landmarks API).
-/// Seluruh perhitungan diambil dari CONTOURS agar kompatibel lintas versi MLKit.
+/// ✅ Face recognition berbasis struktur + tekstur + liveness check.
+/// Kompatibel penuh dengan `image: ^4.x.x`.
 class FaceStructureService {
   final FaceDetector _detector = FaceDetector(
     options: FaceDetectorOptions(
       performanceMode: FaceDetectorMode.accurate,
-      enableContours: true,  // <-- WAJIB TRUE
-      enableLandmarks: false, // <-- kita tidak pakai landmarks sama sekali
+      enableContours: true,
+      enableLandmarks: false,
     ),
   );
 
-  // Batas-batas aturan
-  static const double minFaceAreaRatio = 0.10; // wajah minimal 10% frame
-  static const double minStructureSimilarity = 0.86; // ambang kemiripan struktur
-  static const double minBlinkDelta = 0.18; // kedipan mata (EAR turun)
-  static const double minYawDeltaDeg = 12;  // gerakan kepala (derajat)
+  // Ambang batas dan sensitivitas
+  static const double minFaceAreaRatio = 0.10;
+  static const double minStructureSimilarity = 0.85; // ✅ ubah ke 85%
+  static const double minBlinkDelta = 0.18;
+  static const double minYawDeltaDeg = 12;
 
-  /// Ekstrak fitur struktur wajah (rasio skala-invariant + EAR + yaw)
+  /// Ekstrak fitur wajah (struktur + tekstur)
   Future<Map<String, double>?> extractStructure(Uint8List bytes) async {
     img.Image? im = img.decodeImage(bytes);
     if (im == null) return null;
@@ -46,9 +45,8 @@ class FaceStructureService {
     }
 
     final face = faces.first;
-
-    // Validasi ukuran wajah relatif terhadap gambar
     final rect = face.boundingBox;
+
     final areaRatio = (rect.width * rect.height) / (im.width * im.height);
     if (areaRatio < minFaceAreaRatio) {
       debugPrint('⚠️ Wajah terlalu kecil ($areaRatio)');
@@ -57,13 +55,19 @@ class FaceStructureService {
 
     final feats = _computeFeaturesFromContours(face);
     if (feats.isEmpty) {
-      debugPrint('⚠️ Fitur kosong (contour kurang lengkap)');
+      debugPrint('⚠️ Contour wajah tidak lengkap');
       return null;
     }
+
+    // Tambahkan fitur tekstur wajah
+    feats['face_area_norm'] = areaRatio;
+    feats['brightness'] = _calculateMeanBrightness(im, rect);
+    feats['color_var'] = _calculateColorVariance(im, rect);
+
     return feats;
   }
 
-  /// Bandingkan dua struktur (0..1), makin tinggi makin mirip
+  /// Bandingkan dua struktur wajah (0..1)
   double compareStructures(Map<String, double> a, Map<String, double> b) {
     const keys = [
       'eye_distance_norm',
@@ -71,7 +75,11 @@ class FaceStructureService {
       'face_height_norm',
       'eye_aspect_ratio',
       'yaw_deg',
+      'face_area_norm',
+      'brightness',
+      'color_var',
     ];
+
     double sum = 0;
     int count = 0;
 
@@ -79,21 +87,21 @@ class FaceStructureService {
       if (!a.containsKey(k) || !b.containsKey(k)) continue;
       final va = a[k]!;
       final vb = b[k]!;
-      // relative error → similarity
       final rel = ((va - vb).abs()) / (((va + vb) / 2).abs() + 1e-6);
       sum += max(0.0, 1.0 - rel);
       count++;
     }
-    return count == 0 ? 0.0 : sum / count;
+
+    return count == 0 ? 0.0 : (sum / count).clamp(0.0, 1.0);
   }
 
-  /// Liveness: deteksi kedipan atau putar kepala
+  /// Deteksi kedipan atau gerakan kepala (liveness)
   bool evaluateLiveness({
     required Map<String, double> baseline,
     required Map<String, double> action,
   }) {
     final earOpen = baseline['eye_aspect_ratio'] ?? 0.0;
-    final earNow  = action['eye_aspect_ratio'] ?? earOpen;
+    final earNow = action['eye_aspect_ratio'] ?? earOpen;
     final blink = (earOpen - earNow) >= minBlinkDelta;
 
     final yaw0 = baseline['yaw_deg'] ?? 0.0;
@@ -103,10 +111,11 @@ class FaceStructureService {
     return blink || headTurn;
   }
 
-  /// ====== PRIVATE: fitur dari contours (tanpa face.landmarks) ======
+  // ===============================================================
+  // PRIVATE: PERHITUNGAN STRUKTUR & TEKSTUR
+  // ===============================================================
 
   Map<String, double> _computeFeaturesFromContours(Face face) {
-    // Ambil pusat (centroid) sebuah contour → Offset
     Offset? _center(FaceContourType type) {
       final pts = face.contours[type]?.points;
       if (pts == null || pts.isEmpty) return null;
@@ -118,7 +127,6 @@ class FaceStructureService {
       return Offset(sx / pts.length, sy / pts.length);
     }
 
-    // Jarak antar dua titik
     double _dist(Offset? a, Offset? b) {
       if (a == null || b == null) return 0.0;
       final dx = a.dx - b.dx;
@@ -126,11 +134,8 @@ class FaceStructureService {
       return sqrt(dx * dx + dy * dy);
     }
 
-    // Titik penting dari contours:
-    final leftEyeCenter  = _center(FaceContourType.leftEye);
-    final rightEyeCenter = _center(FaceContourType.rightEye);
-
-    // Untuk hidung, coba bridge (atas), fallback ke noseBottom (bawah)
+    final leftEye = _center(FaceContourType.leftEye);
+    final rightEye = _center(FaceContourType.rightEye);
     Offset? _noseCenter() {
       final bridge = face.contours[FaceContourType.noseBridge]?.points;
       if (bridge != null && bridge.isNotEmpty) {
@@ -146,63 +151,88 @@ class FaceStructureService {
     }
 
     final nose = _noseCenter();
-
-    if (leftEyeCenter == null || rightEyeCenter == null || nose == null) {
-      debugPrint('⚠️ Contour penting tidak lengkap (mata/hidung)');
+    if (leftEye == null || rightEye == null || nose == null) {
       return {};
     }
 
-    // Dimensi wajah dari bounding box
-    final faceWidth  = face.boundingBox.width;
+    final faceWidth = face.boundingBox.width;
     final faceHeight = face.boundingBox.height;
-
-    // Rasio jarak mata terhadap lebar wajah
-    final eyeDist = _dist(leftEyeCenter, rightEyeCenter);
-
-    // Estimasi dagu = bagian bawah bounding box
-    final chinY = face.boundingBox.bottom; // pakai BB bawah
+    final eyeDist = _dist(leftEye, rightEye);
+    final chinY = face.boundingBox.bottom;
     final noseToChin = chinY - nose.dy;
 
-    // EAR dari contours (kedipan)
     final ear = _calculateEARFromContours(face);
-
-    // Yaw (derajat) dari MLKit (jika null → 0)
     final yaw = face.headEulerAngleY ?? 0.0;
 
-    // Safety divide
-    final eyeDistanceNorm = faceWidth == 0 ? 0.0 : eyeDist / faceWidth;
-    final noseToChinNorm  = faceHeight == 0 ? 0.0 : noseToChin / faceHeight;
-    final faceHeightNorm  = faceWidth == 0 ? 0.0 : faceHeight / faceWidth;
-
     return {
-      'eye_distance_norm': eyeDistanceNorm,
-      'nose_to_chin_norm': noseToChinNorm,
-      'face_height_norm' : faceHeightNorm,
-      'eye_aspect_ratio' : ear,
-      'yaw_deg'          : yaw,
+      'eye_distance_norm': faceWidth == 0 ? 0.0 : eyeDist / faceWidth,
+      'nose_to_chin_norm': faceHeight == 0 ? 0.0 : noseToChin / faceHeight,
+      'face_height_norm': faceWidth == 0 ? 0.0 : faceHeight / faceWidth,
+      'eye_aspect_ratio': ear,
+      'yaw_deg': yaw,
     };
   }
 
-  /// EAR dari contours mata kiri & kanan (butuh minimal 6 titik per mata)
+  /// Hitung Eye Aspect Ratio (EAR)
   double _calculateEARFromContours(Face face) {
-    final left  = face.contours[FaceContourType.leftEye]?.points;
+    final left = face.contours[FaceContourType.leftEye]?.points;
     final right = face.contours[FaceContourType.rightEye]?.points;
     if (left == null || right == null || left.length < 6 || right.length < 6) {
       return 0.0;
     }
 
     double d(p, q) => sqrt(pow(p.x - q.x, 2) + pow(p.y - q.y, 2));
-
-    // Indeks referensi sederhana (0..5) — MLKit bisa berbeda urutan,
-    // tapi pola rasio tetap stabil (atas-bawah vs kiri-kanan).
-    final leftEar  = d(left[1], left[5]) / (d(left[0], left[3]) + 1e-6);
+    final leftEar = d(left[1], left[5]) / (d(left[0], left[3]) + 1e-6);
     final rightEar = d(right[1], right[5]) / (d(right[0], right[3]) + 1e-6);
-
     return (leftEar + rightEar) / 2.0;
-    // Catatan: jika ingin lebih stabil, bisa gunakan median beberapa pasangan titik.
   }
 
-  /// Simpan gambar sementara agar bisa diproses MLKit
+  /// Rata-rata brightness wajah
+  double _calculateMeanBrightness(img.Image im, Rect box) {
+    int startX = box.left.round().clamp(0, im.width - 1);
+    int startY = box.top.round().clamp(0, im.height - 1);
+    int endX = box.right.round().clamp(0, im.width);
+    int endY = box.bottom.round().clamp(0, im.height);
+
+    double sum = 0;
+    int count = 0;
+
+    for (int y = startY; y < endY; y += 3) {
+      for (int x = startX; x < endX; x += 3) {
+        final pixel = im.getPixel(x, y);
+        final gray = (0.299 * pixel.r + 0.587 * pixel.g + 0.114 * pixel.b) / 255.0;
+        sum += gray;
+        count++;
+      }
+    }
+    return count == 0 ? 0.0 : sum / count;
+  }
+
+  /// Variansi warna wajah
+  double _calculateColorVariance(img.Image im, Rect box) {
+    int startX = box.left.round().clamp(0, im.width - 1);
+    int startY = box.top.round().clamp(0, im.height - 1);
+    int endX = box.right.round().clamp(0, im.width);
+    int endY = box.bottom.round().clamp(0, im.height);
+
+    List<double> vals = [];
+
+    for (int y = startY; y < endY; y += 5) {
+      for (int x = startX; x < endX; x += 5) {
+        final pixel = im.getPixel(x, y);
+        final gray = (0.299 * pixel.r + 0.587 * pixel.g + 0.114 * pixel.b) / 255.0;
+        vals.add(gray);
+      }
+    }
+
+    if (vals.isEmpty) return 0.0;
+    final mean = vals.reduce((a, b) => a + b) / vals.length;
+    final varSum =
+        vals.map((v) => pow(v - mean, 2)).reduce((a, b) => a + b) / vals.length;
+    return sqrt(varSum);
+  }
+
+  /// Simpan file sementara
   Future<String> _saveTemp(Uint8List bytes) async {
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/face_${DateTime.now().millisecondsSinceEpoch}.jpg');
