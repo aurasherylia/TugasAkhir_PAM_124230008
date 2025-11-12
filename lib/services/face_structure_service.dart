@@ -8,8 +8,7 @@ import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 
-/// ✅ Face recognition berbasis struktur + tekstur + liveness check.
-/// Kompatibel penuh dengan `image: ^4.x.x`.
+
 class FaceStructureService {
   final FaceDetector _detector = FaceDetector(
     options: FaceDetectorOptions(
@@ -21,11 +20,11 @@ class FaceStructureService {
 
   // Ambang batas dan sensitivitas
   static const double minFaceAreaRatio = 0.10;
-  static const double minStructureSimilarity = 0.85; // ✅ ubah ke 85%
+  static const double minStructureSimilarity = 0.85; 
   static const double minBlinkDelta = 0.18;
   static const double minYawDeltaDeg = 12;
 
-  /// Ekstrak fitur wajah (struktur + tekstur)
+
   Future<Map<String, double>?> extractStructure(Uint8List bytes) async {
     img.Image? im = img.decodeImage(bytes);
     if (im == null) return null;

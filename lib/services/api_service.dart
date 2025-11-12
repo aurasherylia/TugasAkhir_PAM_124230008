@@ -3,13 +3,9 @@ import 'package:http/http.dart' as http;
 import '../models/doctor.dart';
 
 class APIService {
-  // 🔗 URL Dokter (GitHub Gist)
   static const _doctorUrl =
       'https://gist.githubusercontent.com/aurasherylia/1e565ea389763e8852a7cfd718445932/raw/dadaa620293a06c49c085e8b7e464f5efb7388f8/doctor.json';
 
-  /// ============================================================
-  /// 👩‍⚕️ Fetch Doctor List
-  /// ============================================================
   static Future<List<Doctor>> fetchDoctors() async {
     try {
       final res = await http

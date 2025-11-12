@@ -46,7 +46,7 @@ class _RegisterPageState extends State<RegisterPage>
     super.dispose();
   }
 
-  // ========================= REGISTER FLOW =========================
+  // REGISTER FLOW 
   Future<void> _registerUser(BuildContext ctx) async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -56,7 +56,6 @@ class _RegisterPageState extends State<RegisterPage>
     final password = _password.text.trim();
 
     try {
-      // 🔹 Cek apakah email sudah ada di database
       final existing = await DBService.login(email: email, password: password);
       if (existing != null) {
         setState(() => _loading = false);
@@ -64,7 +63,6 @@ class _RegisterPageState extends State<RegisterPage>
         return;
       }
 
-      // 🔹 Langsung ke halaman capture wajah terlebih dahulu
       setState(() => _loading = false);
       final result = await Navigator.push(
         ctx,
@@ -73,7 +71,6 @@ class _RegisterPageState extends State<RegisterPage>
         ),
       );
 
-      // 🔹 Jika wajah berhasil disimpan → simpan user ke DB
       if (result == true) {
         setState(() => _loading = true);
         final msg = await DBService.register(
@@ -97,7 +94,7 @@ class _RegisterPageState extends State<RegisterPage>
     }
   }
 
-  // ========================= UI =========================
+  // UI 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -265,7 +262,7 @@ class _RegisterPageState extends State<RegisterPage>
     );
   }
 
-  // ========================= DIALOG SUKSES =========================
+  // DIALOG SUKSES 
   void _showSuccessDialog(BuildContext ctx) {
     if (!mounted) return;
     _controller.reset();
@@ -357,7 +354,7 @@ class _RegisterPageState extends State<RegisterPage>
     );
   }
 
-  // ========================= DIALOG ERROR =========================
+  // DIALOG ERROR 
   void _showErrorDialog(BuildContext ctx, String msg) {
     showDialog(
       context: ctx,

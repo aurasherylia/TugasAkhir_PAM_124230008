@@ -39,7 +39,7 @@ class _SearchPageState extends State<SearchPage> {
         child: SafeArea(
           child: Column(
             children: [
-              // ================= HEADER =================
+              // HEADER
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
                 child: Row(
@@ -63,18 +63,18 @@ class _SearchPageState extends State<SearchPage> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 48), // keseimbangan kanan
+                    const SizedBox(width: 48),
                   ],
                 ),
               ),
 
-              // ================= SEARCH BAR =================
+              // SEARCH BAR
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
                 child: _searchBar(),
               ),
 
-              // ================= HASIL PENCARIAN =================
+              // HASIL PENCARIAN
               Expanded(
                 child: filtered.isEmpty
                     ? const Center(
@@ -97,7 +97,7 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  /// ==================== SEARCH BAR ====================
+  //SEARCH BAR 
   Widget _searchBar() {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
@@ -131,7 +131,7 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  /// ==================== DOCTOR CARD ====================
+  // DOCTOR CARD 
   Widget _doctorCard(Doctor d) {
     final priceIdr = parseRupiahToInt(d.checkup);
     final priceStr = formatCurrencyFromIdr(priceIdr);
@@ -260,16 +260,16 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  /// ==================== COLOR PER SPECIALIST ====================
+  /// COLOR PER SPECIALIST
   Color _getSpecialistColor(String specialist) {
     final s = specialist.toLowerCase();
-    if (s.contains('umum')) return const Color(0xFFE57373); // merah lembut
-    if (s.contains('anak')) return const Color(0xFF64B5F6); // biru muda
-    if (s.contains('jantung')) return const Color(0xFFF06292); // pink
-    if (s.contains('kulit')) return const Color(0xFF81C784); // hijau muda
-    if (s.contains('mata')) return const Color(0xFFFFB74D); // oranye lembut
-    if (s.contains('kandungan')) return const Color(0xFF9575CD); // ungu
-    if (s.contains('saraf')) return const Color(0xFFE57373); // merah lembut
-    return kPrimary; // default
+    if (s.contains('umum')) return const Color(0xFFE57373); 
+    if (s.contains('anak')) return const Color(0xFF64B5F6); 
+    if (s.contains('jantung')) return const Color(0xFFF06292); 
+    if (s.contains('kulit')) return const Color(0xFF81C784); 
+    if (s.contains('mata')) return const Color(0xFFFFB74D); 
+    if (s.contains('kandungan')) return const Color(0xFF9575CD); 
+    if (s.contains('saraf')) return const Color(0xFFE57373); 
+    return kPrimary; 
   }
 }

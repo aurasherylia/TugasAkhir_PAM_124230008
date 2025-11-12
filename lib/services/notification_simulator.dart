@@ -7,13 +7,11 @@ import 'package:timezone/timezone.dart' as tz;
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
-/// 🔑 Global navigatorKey — tetap dipakai agar app bisa akses context global
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 class NotificationSimulator {
   static Timer? _timer;
 
-  /// ✅ Inisialisasi notifikasi & izin
   static Future<void> initialize() async {
     tz.initializeTimeZones();
     tz.setLocalLocation(tz.getLocation('Asia/Jakarta'));
@@ -36,10 +34,10 @@ class NotificationSimulator {
             IOSFlutterLocalNotificationsPlugin>();
     await iosPlugin?.requestPermissions(alert: true, badge: true, sound: true);
 
-    debugPrint("✅ NotificationSimulator initialized successfully");
+    debugPrint("NotificationSimulator initialized successfully");
   }
 
-  /// 🔁 Reminder tiap 5 menit
+  //Reminder tiap 5 menit
   static Future<void> startRepeatingNotification() async {
     await flutterLocalNotificationsPlugin.cancelAll();
     _timer?.cancel();
@@ -61,7 +59,7 @@ class NotificationSimulator {
 
     const details = NotificationDetails(android: androidDetails, iOS: iosDetails);
 
-    // 🔹 Muncul sekali saat aplikasi dibuka
+    // Muncul sekali saat aplikasi dibuka
     await flutterLocalNotificationsPlugin.show(
       0,
       '💙 Jaga Kesehatanmu!',
@@ -69,7 +67,7 @@ class NotificationSimulator {
       details,
     );
 
-    // 🔹 Foreground tiap 5 menit
+    // Foreground tiap 5 menit
     _timer = Timer.periodic(const Duration(minutes: 5), (_) async {
       await flutterLocalNotificationsPlugin.show(
         0,
@@ -79,7 +77,7 @@ class NotificationSimulator {
       );
     });
 
-    // 🔹 Background schedule (5 menit × 20 kali)
+    //Background schedule
     for (int i = 1; i <= 20; i++) {
       await flutterLocalNotificationsPlugin.zonedSchedule(
         i,
@@ -110,7 +108,7 @@ class NotificationSimulator {
     );
 
     const iosDetails = DarwinNotificationDetails(
-      presentAlert: true,   // 👈 tampil di foreground
+      presentAlert: true,  
       presentBadge: true,
       presentSound: true,
     );
@@ -124,6 +122,6 @@ class NotificationSimulator {
       details,
     );
 
-    debugPrint("📩 ✅ Payment success notification displayed!");
+    debugPrint("Payment success notification displayed!");
   }
 }

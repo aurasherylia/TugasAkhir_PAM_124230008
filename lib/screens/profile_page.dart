@@ -9,7 +9,7 @@ import '../theme.dart';
 import '../services/db_service.dart';
 import 'login_page.dart';
 
-/// ======== Event Bus agar HomePage ikut ter-update realtime ========
+// Event Bus 
 class ProfileUpdateBus {
   ProfileUpdateBus._();
   static final ProfileUpdateBus instance = ProfileUpdateBus._();
@@ -18,9 +18,7 @@ class ProfileUpdateBus {
   void notify() => _ctrl.add(null);
 }
 
-/// =================================================================
-///                            PROFILE PAGE
-/// =================================================================
+//PROFILE PAGE
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
@@ -57,7 +55,7 @@ class _ProfilePageState extends State<ProfilePage> {
     setState(() => _loading = false);
   }
 
-  /// ==================== Edit Username ====================
+  // Edit Username
   Future<void> _editUsername() async {
     final nameCtrl = TextEditingController(text: _username);
     final formKey = GlobalKey<FormState>();
@@ -200,7 +198,6 @@ class _ProfilePageState extends State<ProfilePage> {
   final formKey = GlobalKey<FormState>();
   bool ob1 = true, ob2 = true, ob3 = true;
 
-  // Simpan context utama agar tidak hilang
   final rootContext = context;
 
   await showDialog(
@@ -359,7 +356,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                               // Popup sukses
                               showDialog(
-                                context: rootContext, // ✅ gunakan context utama
+                                context: rootContext,
                                 barrierDismissible: false,
                                 builder: (_) {
                                   final width = MediaQuery.of(rootContext).size.width;
@@ -465,7 +462,7 @@ class _ProfilePageState extends State<ProfilePage> {
 }
 
 
-  // ==================== Foto Profil ====================
+  // Foto Profil 
   Future<void> _pickPhoto() async {
     final picked =
         await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
@@ -485,7 +482,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _snack("Foto berhasil dihapus!", Colors.red);
   }
 
-  // ==================== Logout ====================
+  //  Logout 
   Future<void> _logout() async {
     final ok = await showDialog<bool>(
       context: context,
@@ -512,7 +509,7 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  // ==================== UI ====================
+  //UI
   @override
   Widget build(BuildContext context) {
     const bgGradient = LinearGradient(
@@ -665,7 +662,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // ==================== SOSIAL MEDIA ====================
+  // SOSIAL MEDIA 
   Widget _socialMediaSection() => Column(
   crossAxisAlignment: CrossAxisAlignment.start,
   children: [
@@ -799,7 +796,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // ==================== MENU ====================
+  // MENU 
   Widget _menuSection() => Column(
         children: [
           _menuTile("Change Password", Icons.lock, _changePassword),

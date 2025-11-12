@@ -22,7 +22,6 @@ class _SchedulePageState extends State<SchedulePage> {
   void initState() {
     super.initState();
     _loadData();
-    // Jika setting timezone berubah, update tampilan
     SettingsService.instance.timezone.addListener(_loadData);
   }
 
@@ -38,7 +37,7 @@ class _SchedulePageState extends State<SchedulePage> {
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getInt('user_id');
       if (userId == null || userId == 0) {
-        debugPrint('⚠️ user_id not found in SharedPreferences!');
+        debugPrint('user_id not found in SharedPreferences!');
         setState(() {
           _appointments = [];
           _loading = false;
@@ -210,7 +209,7 @@ class _AppointmentCard extends StatelessWidget {
     required this.onDelete,
   });
 
-  // 🎨 Warna spesialis dinamis
+
   Color _getSpecialistColor(String specialist) {
     final s = specialist.toLowerCase();
     if (s.contains('umum')) return const Color(0xFFE57373);
@@ -223,7 +222,7 @@ class _AppointmentCard extends StatelessWidget {
     return kPrimary;
   }
 
-  // 🕒 Format waktu + timezone label
+
   String _formatTimeWithTimezone(String slot) {
     if (slot.isEmpty) return '-';
     return slot;
@@ -266,7 +265,6 @@ class _AppointmentCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Dokter
           Row(
             children: [
               CircleAvatar(
@@ -309,7 +307,6 @@ class _AppointmentCard extends StatelessWidget {
           const Divider(),
           const SizedBox(height: 8),
 
-          // Detail waktu & tanggal
           Row(
             children: [
               Expanded(
@@ -348,7 +345,7 @@ class _AppointmentCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          // Status & Aksi
+          // cek status completed
           if (isCompleted)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

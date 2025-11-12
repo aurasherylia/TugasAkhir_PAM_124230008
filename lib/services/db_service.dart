@@ -15,13 +15,13 @@ class DBService {
 
     final dir = await getApplicationSupportDirectory();
     final path = p.join(dir.path, 'aormed.db');
-    print('📂 Persistent DB path: $path');
+    print('Persistent DB path: $path');
 
     // hapus versi lama di lokasi default
     final oldPath = p.join(await getDatabasesPath(), 'aormed.db');
     if (await File(oldPath).exists()) {
       await deleteDatabase(oldPath);
-      print('🗑️ Deleted old DB (readonly fix)');
+      print('Deleted old DB (readonly fix)');
     }
 
     _db = await openDatabase(
@@ -84,7 +84,7 @@ class DBService {
       )
     ''');
 
-    print('✅ All tables created successfully');
+    print('All tables created successfully');
   }
 
   // ========================== UPGRADE HANDLER ==========================
@@ -115,22 +115,22 @@ class DBService {
           structure_json TEXT
         )
       ''');
-      print('🧠 Created missing faces table');
+      print('Created missing faces table');
     } else {
       final faceCols = await db.rawQuery("PRAGMA table_info(faces)");
       final faceNames = faceCols.map((e) => e['name'] as String).toList();
 
       if (!faceNames.contains('face_image')) {
         await db.execute("ALTER TABLE faces ADD COLUMN face_image TEXT;");
-        print('📸 Added missing column face_image');
+        print('Added missing column face_image');
       }
       if (!faceNames.contains('image_path')) {
         await db.execute("ALTER TABLE faces ADD COLUMN image_path TEXT;");
-        print('🖼️ Added missing column image_path');
+        print('Added missing column image_path');
       }
       if (!faceNames.contains('structure_json')) {
         await db.execute("ALTER TABLE faces ADD COLUMN structure_json TEXT;");
-        print('🧬 Added missing column structure_json');
+        print('Added missing column structure_json');
       }
     }
   }
@@ -172,7 +172,7 @@ class DBService {
           'password': encrypt(password),
         },
       );
-      print('✅ User baru ditambahkan: $normalizedEmail');
+      print('User baru ditambahkan: $normalizedEmail');
       return null;
     } catch (e) {
       return 'Gagal registrasi: $e';
@@ -230,7 +230,7 @@ class DBService {
       whereArgs: [userId],
       orderBy: 'datetime(created_at) DESC',
     );
-    print('📋 Loaded ${result.length} appointments for user $userId');
+    print('Loaded ${result.length} appointments for user $userId');
     return result;
   }
 
@@ -325,7 +325,7 @@ class DBService {
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
-    print('🧠 Struktur wajah disimpan untuk $email');
+    print('Struktur wajah disimpan untuk $email');
   }
 
   static Future<Map<String, double>?> getFaceStructureByEmail(String email) async {
@@ -363,7 +363,7 @@ class DBService {
       final bytes = base64Decode(base64Str);
       return bytes;
     } catch (e) {
-      print('❌ Error decode base64: $e');
+      print('Error decode base64: $e');
       return null;
     }
   }

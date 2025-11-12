@@ -21,14 +21,14 @@ Future<void> main() async {
   final oldDbPath = p.join(await getDatabasesPath(), 'aormed.db');
   if (await File(oldDbPath).exists()) {
     await deleteDatabase(oldDbPath);
-    debugPrint('🗑️ Deleted old read-only DB (migration fix)');
+    debugPrint('Deleted old read-only DB (migration fix)');
   }
 
 
   runApp(const AorMedApp());
 }
 
-/// ==================== APP WRAPPER ====================
+// APP WRAPPER
 class AorMedApp extends StatelessWidget {
   const AorMedApp({super.key});
 
@@ -48,7 +48,7 @@ class AorMedApp extends StatelessWidget {
   }
 }
 
-/// ==================== SPLASH SCREEN ====================
+// SPLASH SCREEN 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
   @override
@@ -72,7 +72,6 @@ class _SplashScreenState extends State<SplashScreen>
     _scaleAnim = CurvedAnimation(parent: _controller, curve: Curves.easeOutBack);
     _controller.forward();
 
-    // ✅ Gunakan addPostFrameCallback supaya context valid
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.delayed(const Duration(seconds: 3), () {
         if (!mounted) return;
@@ -129,7 +128,7 @@ class _SplashScreenState extends State<SplashScreen>
   }
 }
 
-/// ==================== ONBOARDING SCREEN ====================
+// ONBOARDING SCREEN
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
   @override
@@ -254,7 +253,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
 
-            /// indikator & next
             Positioned(
               bottom: 70,
               child: Row(
@@ -302,7 +300,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
-/// ==================== START SCREEN ====================
+// START SCREEN
 class StartScreen extends StatelessWidget {
   const StartScreen({super.key});
 

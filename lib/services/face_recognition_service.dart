@@ -16,7 +16,6 @@ class FaceRecognitionService {
   late List<int> _outputShape;
   final ImagePicker _picker = ImagePicker();
 
-  // ====================== LOAD MODEL ======================
   Future<void> loadModel() async {
     if (_isLoaded) return;
 
@@ -27,12 +26,12 @@ class FaceRecognitionService {
     _outputShape = _interpreter!.getOutputTensor(0).shape;
     _isLoaded = true;
 
-    debugPrint('✅ FaceNet model loaded successfully');
+    debugPrint('FaceNet model loaded successfully');
   }
 
   bool get isReady => _isLoaded && _interpreter != null;
 
-  // ====================== CAPTURE FACE (HANYA DARI KAMERA) ======================
+  // CAPTURE FACE (HANYA DARI KAMERA)
   Future<Uint8List?> captureFaceImage(BuildContext context) async {
     try {
       final image = await _picker.pickImage(
@@ -49,7 +48,7 @@ class FaceRecognitionService {
     }
   }
 
-  // ====================== EXTRACT FACE EMBEDDING ======================
+  // EXTRACT FACE EMBEDDING 
   Future<List<double>?> extractFaceEmbedding(Uint8List bytes) async {
     if (!_isLoaded) await loadModel();
     if (_interpreter == null) return null;
@@ -91,7 +90,7 @@ class FaceRecognitionService {
       final face = faces.first;
       final rect = face.boundingBox;
 
-      // ✅ Validasi ukuran wajah minimal (≥10% frame)
+      // Validasi ukuran wajah minimal (≥10% frame)
       final areaRatio =
           (rect.width * rect.height) / (image.width * image.height);
       if (areaRatio < 0.1) {
@@ -153,7 +152,7 @@ class FaceRecognitionService {
     }
   }
 
-  // ====================== COMPARE FACES ======================
+  // COMPARE FACES
   bool isSameFace(List<double> a, List<double> b, {double threshold = 0.72}) {
     if (a.length != b.length) return false;
     double sum = 0;
