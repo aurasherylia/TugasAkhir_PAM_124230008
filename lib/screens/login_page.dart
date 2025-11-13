@@ -524,7 +524,7 @@ class _UserTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Uint8List?>(
-      future: DBService.getFaceImage(user['email']),
+      future: DBService.getUserPhoto(user['id']),
       builder: (ctx, snap) {
         return InkWell(
           borderRadius: BorderRadius.circular(20),

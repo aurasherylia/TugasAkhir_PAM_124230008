@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as p;
@@ -17,16 +16,9 @@ class DBService {
     final path = p.join(dir.path, 'aormed.db');
     print('Persistent DB path: $path');
 
-    // hapus versi lama di lokasi default
-    final oldPath = p.join(await getDatabasesPath(), 'aormed.db');
-    if (await File(oldPath).exists()) {
-      await deleteDatabase(oldPath);
-      print('Deleted old DB (readonly fix)');
-    }
-
     _db = await openDatabase(
       path,
-      version: 32, // naikkan versi supaya migrasi
+      version: 35, // tingkatkan versi
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -42,7 +34,8 @@ class DBService {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT,
         email TEXT UNIQUE,
-        password TEXT
+        password TEXT,
+        photo TEXT        
       )
     ''');
 
@@ -73,18 +66,7 @@ class DBService {
       )
     ''');
 
-    await db.execute('''
-      CREATE TABLE faces(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        email TEXT UNIQUE,
-        embedding TEXT,
-        image_path TEXT,
-        face_image TEXT,
-        structure_json TEXT
-      )
-    ''');
-
-    print('All tables created successfully');
+    print('All tables created successfully (clean version)');
   }
 
   // ========================== UPGRADE HANDLER ==========================
@@ -94,49 +76,27 @@ class DBService {
 
   // ========================== CHECK & FIX TABLE STRUCTURE ==========================
   static Future<void> _ensureColumnsExist(Database db) async {
-    final appCols = await db.rawQuery("PRAGMA table_info(appointments)");
-    final appNames = appCols.map((e) => e['name'] as String).toList();
-    if (!appNames.contains('doctor_image')) {
-      await db.execute("ALTER TABLE appointments ADD COLUMN doctor_image TEXT;");
-      print('🩺 Added missing column doctor_image');
+    final userCols = await db.rawQuery("PRAGMA table_info(users)");
+    final colNames = userCols.map((e) => e['name'] as String).toList();
+
+    if (!colNames.contains('photo')) {
+      await db.execute("ALTER TABLE users ADD COLUMN photo TEXT;");
+      print('Added missing column: photo');
     }
 
-    final faceTable = await db.rawQuery(
-      "SELECT name FROM sqlite_master WHERE type='table' AND name='faces';",
-    );
-    if (faceTable.isEmpty) {
-      await db.execute('''
-        CREATE TABLE faces(
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          email TEXT UNIQUE,
-          embedding TEXT,
-          image_path TEXT,
-          face_image TEXT,
-          structure_json TEXT
-        )
-      ''');
-      print('Created missing faces table');
-    } else {
-      final faceCols = await db.rawQuery("PRAGMA table_info(faces)");
-      final faceNames = faceCols.map((e) => e['name'] as String).toList();
+    final appCols = await db.rawQuery("PRAGMA table_info(appointments)");
+    final appNames = appCols.map((e) => e['name'] as String).toList();
 
-      if (!faceNames.contains('face_image')) {
-        await db.execute("ALTER TABLE faces ADD COLUMN face_image TEXT;");
-        print('Added missing column face_image');
-      }
-      if (!faceNames.contains('image_path')) {
-        await db.execute("ALTER TABLE faces ADD COLUMN image_path TEXT;");
-        print('Added missing column image_path');
-      }
-      if (!faceNames.contains('structure_json')) {
-        await db.execute("ALTER TABLE faces ADD COLUMN structure_json TEXT;");
-        print('Added missing column structure_json');
-      }
+    if (!appNames.contains('doctor_image')) {
+      await db.execute("ALTER TABLE appointments ADD COLUMN doctor_image TEXT;");
+      print('Added missing column: doctor_image');
     }
   }
 
   // ========================== UTILITIES ==========================
-  static String encrypt(String text) => sha256.convert(utf8.encode(text)).toString();
+  static String encrypt(String text) {
+    return sha256.convert(utf8.encode(text)).toString();
+  }
 
   static String generateInvoiceNumber() {
     final now = DateTime.now();
@@ -160,18 +120,18 @@ class DBService {
         whereArgs: [normalizedEmail],
         limit: 1,
       );
+
       if (existing.isNotEmpty) {
         return 'Email sudah terdaftar! Gunakan email lain.';
       }
 
-      await db.insert(
-        'users',
-        {
-          'username': username,
-          'email': normalizedEmail,
-          'password': encrypt(password),
-        },
-      );
+      await db.insert('users', {
+        'username': username,
+        'email': normalizedEmail,
+        'password': encrypt(password),
+        'photo': null,
+      });
+
       print('User baru ditambahkan: $normalizedEmail');
       return null;
     } catch (e) {
@@ -193,16 +153,62 @@ class DBService {
     return res.isNotEmpty ? res.first : null;
   }
 
+  // Ambil user terbaru
   static Future<List<Map<String, dynamic>>> getRecentUsers({int limit = 3}) async {
-  final db = await database;
-  final users = await db.query(
-    'users',
-    orderBy: 'id DESC',
-    limit: limit,
-  );
-  return users;
-}
+    final db = await database;
+    final users = await db.query(
+      'users',
+      orderBy: 'id DESC',
+      limit: limit,
+    );
+    return users;
+  }
 
+  // ========================== FOTO PROFIL (CRUD) ==========================
+  static Future<void> saveUserPhoto(int userId, Uint8List bytes) async {
+    final db = await database;
+    final base64Img = base64Encode(bytes);
+
+    await db.update(
+      'users',
+      {'photo': base64Img},
+      where: 'id = ?',
+      whereArgs: [userId],
+    );
+  }
+
+  static Future<void> removeUserPhoto(int userId) async {
+    final db = await database;
+
+    await db.update(
+      'users',
+      {'photo': null},
+      where: 'id = ?',
+      whereArgs: [userId],
+    );
+  }
+
+  static Future<Uint8List?> getUserPhoto(int userId) async {
+    final db = await database;
+    final res = await db.query(
+      'users',
+      columns: ['photo'],
+      where: 'id = ?',
+      whereArgs: [userId],
+      limit: 1,
+    );
+
+    if (res.isEmpty) return null;
+
+    final base64Str = res.first['photo']?.toString() ?? '';
+    if (base64Str.isEmpty) return null;
+
+    try {
+      return base64Decode(base64Str);
+    } catch (_) {
+      return null;
+    }
+  }
 
   // ========================== APPOINTMENTS ==========================
   static Future<int> addAppointment({
@@ -218,6 +224,7 @@ class DBService {
   }) async {
     final db = await database;
     final invoice = generateInvoiceNumber();
+
     return await db.insert('appointments', {
       'user_id': userId,
       'doctor_name': doctorName,
@@ -235,14 +242,12 @@ class DBService {
 
   static Future<List<Map<String, dynamic>>> getAppointmentsByUser(int userId) async {
     final db = await database;
-    final result = await db.query(
+    return await db.query(
       'appointments',
       where: 'user_id = ?',
       whereArgs: [userId],
       orderBy: 'datetime(created_at) DESC',
     );
-    print('Loaded ${result.length} appointments for user $userId');
-    return result;
   }
 
   static Future<void> deleteAppointment(int id) async {
@@ -270,112 +275,5 @@ class DBService {
       whereArgs: [appointmentId],
       orderBy: 'datetime(timestamp) ASC',
     );
-  }
-
-  // ========================== FACES (EMBEDDING) ==========================
-  static Future<void> saveFaceEmbedding({
-    required String email,
-    required List<double> embedding,
-    String? imagePath,
-    Uint8List? imageBytes,
-  }) async {
-    final db = await database;
-    String base64Image = '';
-    if (imageBytes != null && imageBytes.isNotEmpty) {
-      base64Image = base64Encode(imageBytes);
-    }
-
-    await db.insert(
-      'faces',
-      {
-        'email': email.trim().toLowerCase(),
-        'embedding': embedding.join(','),
-        'image_path': imagePath ?? '',
-        'face_image': base64Image,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
-
-  static Future<List<double>?> getEmbeddingByEmail(String email) async {
-    final db = await database;
-    final result = await db.query(
-      'faces',
-      where: 'email = ?',
-      whereArgs: [email.trim().toLowerCase()],
-      limit: 1,
-    );
-
-    if (result.isEmpty) return null;
-
-    final embeddingString = result.first['embedding']?.toString() ?? '';
-    final list = embeddingString
-        .split(',')
-        .map((e) => double.tryParse(e.trim()) ?? 0.0)
-        .toList();
-
-    return list;
-  }
-
-  // ========================== FACES (STRUCTURE) ==========================
-  static Future<void> saveFaceStructure({
-    required String email,
-    required Map<String, double> structure,
-    Uint8List? imageBytes,
-  }) async {
-    final db = await database;
-    String base64Img = '';
-    if (imageBytes != null) base64Img = base64Encode(imageBytes);
-
-    await db.insert(
-      'faces',
-      {
-        'email': email.trim().toLowerCase(),
-        'structure_json': jsonEncode(structure),
-        'face_image': base64Img,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-    print('Struktur wajah disimpan untuk $email');
-  }
-
-  static Future<Map<String, double>?> getFaceStructureByEmail(String email) async {
-    final db = await database;
-    final res = await db.query(
-      'faces',
-      columns: ['structure_json'],
-      where: 'email = ?',
-      whereArgs: [email.trim().toLowerCase()],
-      limit: 1,
-    );
-    if (res.isEmpty) return null;
-    final data = res.first['structure_json'] as String?;
-    if (data == null || data.isEmpty) return null;
-    final Map<String, dynamic> raw = jsonDecode(data);
-    return raw.map((k, v) => MapEntry(k, (v as num).toDouble()));
-  }
-
-  static Future<Uint8List?> getFaceImage(String email) async {
-    final db = await database;
-    final res = await db.query(
-      'faces',
-      columns: ['face_image'],
-      where: 'email = ?',
-      whereArgs: [email.trim().toLowerCase()],
-      limit: 1,
-    );
-
-    if (res.isEmpty) return null;
-
-    final base64Str = res.first['face_image']?.toString() ?? '';
-    if (base64Str.isEmpty) return null;
-
-    try {
-      final bytes = base64Decode(base64Str);
-      return bytes;
-    } catch (e) {
-      print('Error decode base64: $e');
-      return null;
-    }
   }
 }

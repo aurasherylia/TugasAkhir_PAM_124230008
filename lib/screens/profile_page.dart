@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
+import 'dart:typed_data';
+import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -44,16 +46,21 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _load() async {
-    final sp = await SharedPreferences.getInstance();
-    _userId = sp.getInt('user_id') ?? 1;
-    _photoPath = sp.getString('photoPath');
-    _username = sp.getString('username') ?? 'User';
-    _nim = sp.getString('nim') ?? '124230008';
-  if (!sp.containsKey('nim')) {
-    await sp.setString('nim', _nim);
+  final sp = await SharedPreferences.getInstance();
+  _userId = sp.getInt('user_id');
+
+  final dbPhoto = await DBService.getUserPhoto(_userId!);
+
+  if (dbPhoto != null) {
+    final temp = await _saveTempImage(dbPhoto);
+    _photoPath = temp;
   }
-    setState(() => _loading = false);
-  }
+
+  _username = sp.getString('username') ?? 'User';
+  _nim = sp.getString('nim') ?? '124230008';
+
+  setState(() => _loading = false);
+}
 
   // Edit Username
   Future<void> _editUsername() async {
@@ -464,23 +471,30 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // Foto Profil 
   Future<void> _pickPhoto() async {
-    final picked =
-        await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
-    if (picked == null) return;
-    final sp = await SharedPreferences.getInstance();
-    await sp.setString('photoPath', picked.path);
-    setState(() => _photoPath = picked.path);
-    ProfileUpdateBus.instance.notify();
-    _snack("Foto berhasil diganti!", Colors.green);
-  }
+  final picked = await _picker.pickImage(
+    source: ImageSource.gallery,
+    imageQuality: 85
+  );
+  if (picked == null) return;
+
+  final bytes = await picked.readAsBytes();
+  await DBService.saveUserPhoto(_userId!, bytes);
+
+  setState(() => _photoPath = picked.path);
+  ProfileUpdateBus.instance.notify();
+
+  _snack("Foto berhasil diperbarui!", const Color.fromARGB(255, 38, 6, 52));
+}
+
 
   Future<void> _removePhoto() async {
-    final sp = await SharedPreferences.getInstance();
-    await sp.remove('photoPath');
-    setState(() => _photoPath = null);
-    ProfileUpdateBus.instance.notify();
-    _snack("Foto berhasil dihapus!", Colors.red);
-  }
+  await DBService.removeUserPhoto(_userId!);
+  setState(() => _photoPath = null);
+
+  ProfileUpdateBus.instance.notify();
+  _snack("Foto berhasil dihapus!", Colors.red);
+}
+
 
   //  Logout 
   Future<void> _logout() async {
@@ -509,6 +523,12 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+Future<String> _saveTempImage(Uint8List bytes) async {
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/profile_${_userId}.png');
+    await file.writeAsBytes(bytes);
+    return file.path;
+  }
   //UI
   @override
   Widget build(BuildContext context) {
@@ -753,12 +773,11 @@ class _ProfilePageState extends State<ProfilePage> {
     final imgs = [
       'assets/images/aura1.jpg',
       'assets/images/aura2.jpg',
-      'assets/images/aura3.jpg'
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Gallery",
+        const Text("Developer",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         const SizedBox(height: 10),
         ClipRRect(
@@ -802,9 +821,9 @@ class _ProfilePageState extends State<ProfilePage> {
           _menuTile("Change Password", Icons.lock, _changePassword),
           const SizedBox(height: 16),
           const _IntegratedFeedbackCard(
-              kesan: "MasyaAllah, tugasnya sangat menantang dan banyak, bikin ga tidur seminggu.",
+              kesan: "Memberikan pengalaman belajar yang sangat berhargaaaa. MasyaAllah, tugasnya sangat menantang, bikin ga tidur seminggu.",
               pesan:
-                  "Semoga dalam penyampaian materi lebih jelas dan mohon berikan saya nilai A ya, pak!"),
+                  "Semoga dalam penyampaian materi lebih jelas, selalu memberikan banyak kejutan, dan mohon berikan saya nilai A ya, pak!"),
           const SizedBox(height: 16),
           const _IntegratedFaqSection(),
         ],
