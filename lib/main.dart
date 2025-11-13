@@ -6,6 +6,7 @@ import 'package:sqflite/sqflite.dart';
 import 'screens/login_page.dart';
 import 'screens/register_page.dart';
 import 'services/notification_simulator.dart';
+import 'services/settings_service.dart';
 
 const kPrimary = Color.fromARGB(255, 65, 44, 110);
 const kBg = Color(0xFFF4EFFF);
@@ -14,6 +15,8 @@ const kDarkText = Color(0xFF3A2C63);
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('id_ID', null);
+  await SettingsService.instance.updateExchangeRate();
+  debugPrint("✔ Kurs berhasil diperbarui dari API");
   await NotificationSimulator.initialize();
   await NotificationSimulator.startRepeatingNotification();
 

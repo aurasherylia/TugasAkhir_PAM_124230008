@@ -132,9 +132,7 @@ class _HomePageState extends State<HomePage> {
     if (mounted) setState(() => loading = false);
   }
 
-  // =========================================================
   // POSISI EFEKTIF + TZ
-  // =========================================================
   Position? get _effectivePosition =>
       _useRealtimeLocation ? userPositionRealtime : _manualPosition;
 
@@ -143,9 +141,7 @@ class _HomePageState extends State<HomePage> {
     return SettingsService.instance.timezone.value;
   }
 
-  // =========================================================
   // REALTIME LOCATION (GPS)
-  // =========================================================
   Future<void> _initRealtimeLocation() async {
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -215,9 +211,7 @@ class _HomePageState extends State<HomePage> {
     return AppTimezone.wib;                   // default Indonesia barat UTC+7
   }
 
-  // =========================================================
   // NEARBY DOCTORS (pakai _effectivePosition)
-  // =========================================================
   Future<void> _loadNearbyDoctors() async {
     final pos = _effectivePosition;
     if (pos == null || doctors.isEmpty) return;
@@ -267,11 +261,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   String _convertAvailableHours(String hours) {
-    // Normalisasi karakter dan format
     String cleaned = hours
-        .replaceAll('–', '-')   // en dash
-        .replaceAll('—', '-')   // em dash
-        .replaceAll('.', ':')   // jika pakai titik
+        .replaceAll('–', '-') 
+        .replaceAll('—', '-')   
+        .replaceAll('.', ':')  
         .trim();
 
     final parts = cleaned.split(RegExp(r'\s*-\s*'));
@@ -283,15 +276,14 @@ class _HomePageState extends State<HomePage> {
       int h = int.tryParse(bits[0]) ?? 0;
       int m = int.tryParse(bits.length > 1 ? bits[1] : '0') ?? 0;
 
-      // Offset timezone aktif
       int offset = 0;
       final tz = _effectiveTimezone;
-      if (tz == AppTimezone.wita) offset = 1;     // UTC+8 vs WIB(+7) => +1
-      if (tz == AppTimezone.wit) offset = 2;      // UTC+9 vs WIB => +2
-      if (tz == AppTimezone.london) offset = -7;  // UTC+0 vs WIB(+7) => -7
+      if (tz == AppTimezone.wita) offset = 1;    
+      if (tz == AppTimezone.wit) offset = 2;    
+      if (tz == AppTimezone.london) offset = -7; 
 
       h = (h + offset) % 24;
-      if (h < 0) h += 24; // jaga agar tetap 0..23
+      if (h < 0) h += 24; 
       return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
     }
 
@@ -304,9 +296,7 @@ class _HomePageState extends State<HomePage> {
     return normalize(parts.first);
   }
 
-  // =========================================================
   // UI
-  // =========================================================
   @override
   Widget build(BuildContext context) {
     final bg = const LinearGradient(
@@ -979,7 +969,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // SETTINGS POPUP (tambahan London timezone)
+  // SETTINGS POPUP
   void _openSettings() {
     final s = SettingsService.instance;
     showModalBottomSheet(
@@ -1081,7 +1071,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // LOKASI MANUAL DENGAN OPENSTREETMAP
+  // LOKASI 
   void _openLocationPicker() {
     AppTimezone pickedTz = _effectiveTimezone;
     bool useRealtime = _useRealtimeLocation;
@@ -1135,7 +1125,7 @@ class _HomePageState extends State<HomePage> {
                     height: 300,
                     child: FlutterMap(
                       options: MapOptions(
-                        center: LatLng(-6.200000, 106.816666), // Jakarta
+                        center: LatLng(-6.200000, 106.816666), 
                         zoom: 11.0,
                         onTap: (tapPos, latLng) async {
                           final pos = Position(
@@ -1188,7 +1178,7 @@ class _HomePageState extends State<HomePage> {
                   Text('Kota: $userCity',
                       style: const TextStyle(fontWeight: FontWeight.w500)),
                   const SizedBox(height: 12),
-                  const Text('Timezone (opsional)',
+                  const Text('Pilih Zona Waktu:',
                       style: TextStyle(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 6),
                   Wrap(
@@ -1311,9 +1301,7 @@ class _HomePageState extends State<HomePage> {
       );
 }
 
-// =========================================================
 // MODELS & EXTRA WIDGETS
-// =========================================================
 class _PromoSlide {
   final String title, sub, image;
   final List<Color> colors;

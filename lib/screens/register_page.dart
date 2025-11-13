@@ -45,43 +45,43 @@ class _RegisterPageState extends State<RegisterPage>
     super.dispose();
   }
 
-  // REGISTER FLOW 
+  // REGISTER FLOW
   Future<void> _registerUser(BuildContext ctx) async {
-  if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) return;
 
-  setState(() => _loading = true);
-  final email = _email.text.trim();
-  final username = _username.text.trim();
-  final password = _password.text.trim();
+    setState(() => _loading = true);
+    final email = _email.text.trim();
+    final username = _username.text.trim();
+    final password = _password.text.trim();
 
-  try {
-    final existing = await DBService.login(email: email, password: password);
-    if (existing != null) {
+    try {
+      final existing = await DBService.login(email: email, password: password);
+      if (existing != null) {
+        setState(() => _loading = false);
+        _showErrorDialog(ctx, 'Email sudah terdaftar! Gunakan email lain.');
+        return;
+      }
+
+      // langsung register tanpa face capture
+      final msg = await DBService.register(
+        username: username,
+        email: email,
+        password: password,
+      );
       setState(() => _loading = false);
-      _showErrorDialog(ctx, 'Email sudah terdaftar! Gunakan email lain.');
-      return;
-    }
 
-    // langsung register tanpa face capture
-    final msg = await DBService.register(
-      username: username,
-      email: email,
-      password: password,
-    );
-    setState(() => _loading = false);
-
-    if (msg != null) {
-      _showErrorDialog(ctx, msg);
-    } else {
-      _showSuccessDialog(ctx);
+      if (msg != null) {
+        _showErrorDialog(ctx, msg);
+      } else {
+        _showSuccessDialog(ctx);
+      }
+    } catch (e) {
+      setState(() => _loading = false);
+      _showErrorDialog(ctx, 'Terjadi kesalahan: $e');
     }
-  } catch (e) {
-    setState(() => _loading = false);
-    _showErrorDialog(ctx, 'Terjadi kesalahan: $e');
   }
-}
 
-  // UI 
+  // UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -116,10 +116,7 @@ class _RegisterPageState extends State<RegisterPage>
                     const Text(
                       'Buat akun baru Anda!',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Color(0xFF866BBE),
-                        fontSize: 15,
-                      ),
+                      style: TextStyle(color: Color(0xFF866BBE), fontSize: 15),
                     ),
                     const SizedBox(height: 20),
                     _buildForm(context),
@@ -150,10 +147,26 @@ class _RegisterPageState extends State<RegisterPage>
             decoration: InputDecoration(
               prefixIcon: const Icon(Icons.person, color: kPrimary),
               labelText: 'Username',
-              border: OutlineInputBorder(
+
+              filled: true,
+              fillColor: Colors.transparent,
+
+              enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: kPrimary.withOpacity(0.8),
+                  width: 1.5,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: kPrimary.withOpacity(0.8),
+                  width: 2,
+                ),
               ),
             ),
+
             validator: (v) =>
                 (v == null || v.isEmpty) ? 'Masukkan username' : null,
           ),
@@ -164,10 +177,26 @@ class _RegisterPageState extends State<RegisterPage>
             decoration: InputDecoration(
               prefixIcon: const Icon(Icons.email, color: kPrimary),
               labelText: 'Email',
-              border: OutlineInputBorder(
+
+              filled: true,
+              fillColor: Colors.transparent,
+
+              enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: kPrimary.withOpacity(0.8),
+                  width: 1.5,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: kPrimary.withOpacity(0.8),
+                  width: 2,
+                ),
               ),
             ),
+
             validator: (v) =>
                 (v == null || !v.contains('@')) ? 'Email tidak valid' : null,
           ),
@@ -185,10 +214,23 @@ class _RegisterPageState extends State<RegisterPage>
                   color: kPrimary,
                 ),
               ),
-              border: OutlineInputBorder(
+
+              filled: true,
+              fillColor: Colors.transparent,
+
+              enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: kPrimary.withOpacity(0.8),
+                  width: 1.5,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: kPrimary, width: 2),
               ),
             ),
+
             validator: (v) =>
                 (v == null || v.length < 6) ? 'Minimal 6 karakter' : null,
           ),
@@ -249,7 +291,7 @@ class _RegisterPageState extends State<RegisterPage>
     );
   }
 
-  // DIALOG SUKSES 
+  // DIALOG SUKSES
   void _showSuccessDialog(BuildContext ctx) {
     if (!mounted) return;
     _controller.reset();
@@ -341,7 +383,7 @@ class _RegisterPageState extends State<RegisterPage>
     );
   }
 
-  // DIALOG ERROR 
+  // DIALOG ERROR
   void _showErrorDialog(BuildContext ctx, String msg) {
     showDialog(
       context: ctx,
