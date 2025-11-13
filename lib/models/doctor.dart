@@ -11,15 +11,13 @@ class Doctor {
   final String address;
   final String image;
 
-  // dari API (string)
-  final String checkup;           // contoh: "Rp200.000"
-  final String availableHours;    // contoh: "08:00–15:30"
+  final String checkup;        
+  final String availableHours;    
 
-  // diturunkan dari API
   final double latitude;
   final double longitude;
-  final int price;                // int yang di-parse dari checkup
-  final List<String> slots;       // di-generate dari availableHours
+  final int price;               
+  final List<String> slots;      
 
   Doctor({
     required this.id,
@@ -42,13 +40,10 @@ class Doctor {
   });
 
   factory Doctor.fromJson(Map<String, dynamic> json) {
-    // 1) parse price dari "Rp200.000" -> 200000
     final parsedPrice = _parseRupiahToInt(json['checkup']?.toString() ?? '');
 
-    // 2) buat slots dari "08:00–15:30" (support '–' dan '-')
     final generatedSlots = _generateSlots(json['available_hours']?.toString() ?? '');
 
-    // 3) ambil koordinat (bisa null)
     final coords = (json['coordinates'] as Map?) ?? {};
     final lat = (coords['latitude'] is num) ? (coords['latitude'] as num).toDouble() : 0.0;
     final lng = (coords['longitude'] is num) ? (coords['longitude'] as num).toDouble() : 0.0;
@@ -74,9 +69,6 @@ class Doctor {
     );
   }
 
-  // ---------- Helpers ----------
-
-  /// "Rp200.000" -> 200000
   static int _parseRupiahToInt(String rupiah) {
     if (rupiah.isEmpty) return 0;
     final digits = rupiah.replaceAll(RegExp(r'[^0-9]'), '');
@@ -84,26 +76,22 @@ class Doctor {
     return int.tryParse(digits) ?? 0;
   }
 
-  /// "08:00–15:30" (atau "08:00-15:30") -> ["09:00 AM", "10:00 AM", ...]
-  /// default: kalau gagal parse, kasih slot bawaan.
   static List<String> _generateSlots(String range) {
     if (range.isEmpty) {
       return _defaultSlots();
     }
 
-    // normalize dash
     final normalized = range.replaceAll('–', '-');
     final parts = normalized.split('-');
     if (parts.length != 2) return _defaultSlots();
 
-    final start = _parseTime(parts[0].trim()); // menit dari 00:00
+    final start = _parseTime(parts[0].trim()); 
     final end = _parseTime(parts[1].trim());
 
     if (start == null || end == null || end <= start) return _defaultSlots();
 
-    // buat slot setiap 60 menit, mulai 1 jam setelah start
     final List<String> result = [];
-    int cursor = start + 60; // mulai 1 jam setelah jam buka
+    int cursor = start + 60; 
     while (cursor <= end) {
       result.add(_minuteToLabel(cursor));
       cursor += 60;
@@ -112,7 +100,6 @@ class Doctor {
     return result;
   }
 
-  /// "08:00" -> 480 (menit). Return null jika gagal.
   static int? _parseTime(String hhmm) {
     final m = RegExp(r'^(\d{1,2}):(\d{2})$').firstMatch(hhmm);
     if (m == null) return null;
@@ -122,7 +109,7 @@ class Doctor {
     return h * 60 + min;
     }
 
-  /// 780 -> "01:00 PM"
+
   static String _minuteToLabel(int minutes) {
     int h24 = minutes ~/ 60;
     int m = minutes % 60;

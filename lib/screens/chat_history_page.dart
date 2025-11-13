@@ -1,4 +1,3 @@
-// 💜 FIXED VERSION - ChatHistoryPage.dart (with Swipe to Delete + Tap to Chat)
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -61,7 +60,7 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
         _loading = false;
       });
     } catch (e) {
-      debugPrint('❌ Error loading chat history: $e');
+      debugPrint('Error loading chat history: $e');
       if (mounted) {
         setState(() {
           _appointments = [];
@@ -204,7 +203,6 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
                                 rawImage = 'https://api.aormed.com$rawImage';
                               }
 
-                              // ✅ Tambahan: navigasi ke ChatPage saat item diklik
                               return Dismissible(
                                 key: ValueKey(a['id']),
                                 direction: DismissDirection.endToStart,
@@ -246,7 +244,6 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.center,
                                       children: [
-                                        // 💜 Foto dokter
                                         Stack(
                                           alignment: Alignment.center,
                                           children: [
@@ -289,7 +286,6 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
                                         ),
                                         const SizedBox(width: 14),
 
-                                        // 📋 Detail Dokter
                                         Expanded(
                                           child: Column(
                                             crossAxisAlignment:
@@ -339,7 +335,7 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
                                                     child: Text(
                                                       specialist,
                                                       style: TextStyle(
-                                                        fontSize: 13,
+                                                        fontSize: 11,
                                                         fontWeight:
                                                             FontWeight.w500,
                                                         color: color,

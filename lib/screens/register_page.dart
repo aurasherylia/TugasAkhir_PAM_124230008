@@ -3,7 +3,6 @@ import 'package:lottie/lottie.dart';
 import '../theme.dart';
 import '../services/db_service.dart';
 import 'login_page.dart';
-import 'face_capture_page.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -48,51 +47,39 @@ class _RegisterPageState extends State<RegisterPage>
 
   // REGISTER FLOW 
   Future<void> _registerUser(BuildContext ctx) async {
-    if (!_formKey.currentState!.validate()) return;
+  if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _loading = true);
-    final email = _email.text.trim();
-    final username = _username.text.trim();
-    final password = _password.text.trim();
+  setState(() => _loading = true);
+  final email = _email.text.trim();
+  final username = _username.text.trim();
+  final password = _password.text.trim();
 
-    try {
-      final existing = await DBService.login(email: email, password: password);
-      if (existing != null) {
-        setState(() => _loading = false);
-        _showErrorDialog(ctx, 'Email sudah terdaftar! Gunakan email lain.');
-        return;
-      }
-
+  try {
+    final existing = await DBService.login(email: email, password: password);
+    if (existing != null) {
       setState(() => _loading = false);
-      final result = await Navigator.push(
-        ctx,
-        MaterialPageRoute(
-          builder: (_) => FaceCapturePage(email: email),
-        ),
-      );
-
-      if (result == true) {
-        setState(() => _loading = true);
-        final msg = await DBService.register(
-          username: username,
-          email: email,
-          password: password,
-        );
-        setState(() => _loading = false);
-
-        if (msg != null) {
-          _showErrorDialog(ctx, msg);
-        } else {
-          _showSuccessDialog(ctx);
-        }
-      } else {
-        _showErrorDialog(ctx, 'Pendaftaran dibatalkan. Harap ambil wajah terlebih dahulu.');
-      }
-    } catch (e) {
-      setState(() => _loading = false);
-      _showErrorDialog(ctx, 'Terjadi kesalahan: $e');
+      _showErrorDialog(ctx, 'Email sudah terdaftar! Gunakan email lain.');
+      return;
     }
+
+    // langsung register tanpa face capture
+    final msg = await DBService.register(
+      username: username,
+      email: email,
+      password: password,
+    );
+    setState(() => _loading = false);
+
+    if (msg != null) {
+      _showErrorDialog(ctx, msg);
+    } else {
+      _showSuccessDialog(ctx);
+    }
+  } catch (e) {
+    setState(() => _loading = false);
+    _showErrorDialog(ctx, 'Terjadi kesalahan: $e');
   }
+}
 
   // UI 
   @override

@@ -193,6 +193,17 @@ class DBService {
     return res.isNotEmpty ? res.first : null;
   }
 
+  static Future<List<Map<String, dynamic>>> getRecentUsers({int limit = 3}) async {
+  final db = await database;
+  final users = await db.query(
+    'users',
+    orderBy: 'id DESC',
+    limit: limit,
+  );
+  return users;
+}
+
+
   // ========================== APPOINTMENTS ==========================
   static Future<int> addAppointment({
     required int userId,

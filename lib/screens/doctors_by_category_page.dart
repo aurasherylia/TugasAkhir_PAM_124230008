@@ -318,13 +318,13 @@ class _DoctorsByCategoryPageState extends State<DoctorsByCategoryPage> {
 
   Color _getSpecialistColor(String specialist) {
   final s = specialist.toLowerCase();
-  if (s.contains('umum')) return const Color(0xFFE57373); // merah lembut
-  if (s.contains('anak')) return const Color(0xFF64B5F6); // biru muda
-  if (s.contains('jantung')) return const Color(0xFFF06292); // pink
-  if (s.contains('kulit')) return const Color(0xFF81C784); // hijau muda
-  if (s.contains('mata')) return const Color(0xFFFFB74D); // oranye lembut
-  if (s.contains('kandungan')) return const Color(0xFF9575CD); // ungu
-  if (s.contains('saraf')) return const Color(0xFFE57373); // merah lembut
+  if (s.contains('umum')) return const Color(0xFFE57373); 
+  if (s.contains('anak')) return const Color(0xFF64B5F6); 
+  if (s.contains('jantung')) return const Color(0xFFF06292); 
+  if (s.contains('kulit')) return const Color(0xFF81C784); 
+  if (s.contains('mata')) return const Color(0xFFFFB74D); 
+  if (s.contains('kandungan')) return const Color(0xFF9575CD);
+  if (s.contains('saraf')) return const Color(0xFFE57373); 
   return kPrimary; // default
 }
 }

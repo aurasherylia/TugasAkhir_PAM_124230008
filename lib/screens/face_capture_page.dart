@@ -19,7 +19,7 @@ class _FaceCapturePageState extends State<FaceCapturePage> {
   XFile? _firstShot;
   XFile? _secondShot;
   bool _processing = false;
-  int _step = 1; // indikator langkah
+  int _step = 1; 
   final _faceService = FaceStructureService();
 
   @override
@@ -32,7 +32,6 @@ class _FaceCapturePageState extends State<FaceCapturePage> {
     try {
       final cameras = await availableCameras();
 
-      // 🔹 Cari kamera depan, kalau tidak ada pakai kamera pertama
       CameraDescription camera;
       if (cameras.any((c) => c.lensDirection == CameraLensDirection.front)) {
         camera = cameras.firstWhere(
@@ -40,14 +39,14 @@ class _FaceCapturePageState extends State<FaceCapturePage> {
         );
       } else {
         camera = cameras.first;
-        debugPrint('⚠️ Tidak ada kamera depan, pakai kamera belakang.');
+        debugPrint('Tidak ada kamera depan, pakai kamera belakang.');
       }
 
       _controller = CameraController(camera, ResolutionPreset.medium);
       await _controller!.initialize();
       if (mounted) setState(() {});
     } catch (e) {
-      debugPrint('❌ Gagal inisialisasi kamera: $e');
+      debugPrint('Gagal inisialisasi kamera: $e');
       setState(() {});
     }
   }
@@ -59,7 +58,6 @@ class _FaceCapturePageState extends State<FaceCapturePage> {
     super.dispose();
   }
 
-  // ========================= CAPTURE FOTO =========================
   Future<void> _capture() async {
     if (!(_controller?.value.isInitialized ?? false)) return;
 
@@ -88,7 +86,6 @@ class _FaceCapturePageState extends State<FaceCapturePage> {
     }
   }
 
-  // ========================= SIMPAN =========================
   Future<void> _save() async {
     if (_firstShot == null || _secondShot == null) return;
 
@@ -135,7 +132,6 @@ class _FaceCapturePageState extends State<FaceCapturePage> {
     );
   }
 
-  // ========================= DIALOG RESPONSIF =========================
   void _showDialog({
     required String title,
     required String message,
@@ -197,7 +193,6 @@ class _FaceCapturePageState extends State<FaceCapturePage> {
     );
   }
 
-  // ========================= UI =========================
   @override
   Widget build(BuildContext context) {
     if (_controller == null || !_controller!.value.isInitialized) {

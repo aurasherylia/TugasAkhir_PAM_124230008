@@ -53,7 +53,6 @@ class _AppointmentPageState extends State<AppointmentPage> {
     consultationIdr = parseRupiahToInt(widget.doctor.checkup);
     _initNotifications();
 
-    // 🔔 Inisialisasi simulator notifikasi
     NotificationSimulator.initialize();
 
     SettingsService.instance.timezone.addListener(_refresh);
@@ -82,7 +81,6 @@ class _AppointmentPageState extends State<AppointmentPage> {
       requestSoundPermission: true,
       onDidReceiveLocalNotification:
           (int id, String? title, String? body, String? payload) async {
-            // ✅ tampilkan notifikasi meskipun app sedang aktif
             await _notifier.show(
               id,
               title ?? '💙 Selamat pembayaran anda berhasil!',
@@ -116,9 +114,6 @@ class _AppointmentPageState extends State<AppointmentPage> {
     debugPrint("✅ Local notifications initialized for iOS device");
   }
 
-  // =========================================================
-  // ===================== UI CODE ===========================
-  // =========================================================
 
   String get _consultationText {
   final s = SettingsService.instance;
@@ -513,21 +508,14 @@ String get _totalText {
     });
   }
 
-  // Helper: waktu realtime berdasarkan timezone aktif
   DateTime _getCurrentTimeByTimezone(AppTimezone tz) {
-    // Waktu UTC dari sistem
     final utcNow = DateTime.now().toUtc();
 
-    // Offset waktu target (WIB, WITA, WIT, dll)
     final offset = SettingsService.instance.offsetHours(tz);
 
-    // WIB sekarang = UTC + 7 (contoh)
     return utcNow.add(Duration(hours: offset));
   }
 
-  // ===================================================
-  // ============ PAYMENT + NOTIFIKASI FIX =============
-  // ===================================================
   Future<void> _confirmAndPay() async {
     setState(() => isLoading = true);
     try {
@@ -661,7 +649,7 @@ String get _totalText {
                     Navigator.pop(context);
                     await Future.delayed(const Duration(milliseconds: 300));
                     await NotificationSimulator.initialize(); 
-                    await NotificationSimulator.showPaymentSuccess(); // 🔔 notifikasi real-time
+                    await NotificationSimulator.showPaymentSuccess(); 
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(builder: (_) => const SchedulePage()),
@@ -676,9 +664,6 @@ String get _totalText {
     );
   }
 
-  // ===================================================
-  // ================= HELPERS UI ======================
-  // ===================================================
   String _getTimezoneLabel(AppTimezone tz) {
     switch (tz) {
       case AppTimezone.wib:
@@ -881,7 +866,6 @@ String get _totalText {
   );
 }
 
-// ===================== SUBWIDGETS =====================
 class _DoctorCardPremium extends StatelessWidget {
   const _DoctorCardPremium({required this.doctor});
   final Doctor doctor;

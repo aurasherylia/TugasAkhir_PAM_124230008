@@ -59,6 +59,7 @@ flutter:
     - assets/images/instagram.png
     - assets/images/whatsapp.png
     - assets/images/tiktok.png
+    - assets/images/faceid.png
     - assets/success.json
     - assets/face_detect.json
     - assets/models/facenet.tflite

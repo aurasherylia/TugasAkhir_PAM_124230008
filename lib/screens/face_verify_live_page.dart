@@ -30,9 +30,7 @@ class _FaceVerifyLivePageState extends State<FaceVerifyLivePage> {
     _initCamera();
   }
 
-  // ======================================================
-  // 🔹 Inisialisasi kamera depan
-  // ======================================================
+  // Inisialisasi kamera 
   Future<void> _initCamera() async {
     try {
       final cameras = await availableCameras();
@@ -58,9 +56,6 @@ class _FaceVerifyLivePageState extends State<FaceVerifyLivePage> {
     }
   }
 
-  // ======================================================
-  // 🔁 Loop deteksi otomatis tiap 2 detik
-  // ======================================================
   void _startVerificationLoop() {
     _timer = Timer.periodic(const Duration(milliseconds: 2000), (_) async {
       if (_verifying || _success || !mounted) return;
@@ -74,20 +69,20 @@ class _FaceVerifyLivePageState extends State<FaceVerifyLivePage> {
 
         // Ambil gambar dari kamera
         final pic = await _controller!.takePicture();
-        await Future.delayed(const Duration(milliseconds: 600)); // cooldown
+        await Future.delayed(const Duration(milliseconds: 600)); 
 
         final bytes = await File(pic.path).readAsBytes();
         final currentStruct = await _faceService.extractStructure(bytes);
 
         if (currentStruct == null || currentStruct.isEmpty) {
-          setState(() => _status = '❌ Wajah tidak terdeteksi');
+          setState(() => _status = 'Wajah tidak terdeteksi');
           _verifying = false;
           return;
         }
 
         final saved = await DBService.getFaceStructureByEmail(widget.email);
         if (saved == null) {
-          setState(() => _status = '⚠️ Data wajah tidak ditemukan');
+          setState(() => _status = 'Data wajah tidak ditemukan');
           _verifying = false;
           return;
         }
@@ -97,9 +92,7 @@ class _FaceVerifyLivePageState extends State<FaceVerifyLivePage> {
         _similarity = sim * 100;
         debugPrint('🔍 Frame $_frameCount → Similarity ${_similarity.toStringAsFixed(2)}%');
 
-        // ========================================
-        // ✅ Jika wajah cocok → Login Berhasil
-        // ========================================
+
         if (sim >= FaceStructureService.minStructureSimilarity && !_success) {
           _timer?.cancel();
           _success = true;
@@ -108,30 +101,28 @@ class _FaceVerifyLivePageState extends State<FaceVerifyLivePage> {
             _similarity = sim * 100;
           });
 
-          // beri waktu sedikit agar animasi UI muncul
           await Future.delayed(const Duration(milliseconds: 1300));
 
           if (mounted) {
-            Navigator.pop(context, true); // kembali ke LoginPage dengan verified = true
+            Navigator.pop(context, true);
           }
         } else if (!_success) {
           setState(() {
             if (_similarity >= 70) {
-              _status = '⚡ Wajah hampir cocok (${_similarity.toStringAsFixed(1)}%)';
+              _status = 'Wajah hampir cocok (${_similarity.toStringAsFixed(1)}%)';
             } else {
-              _status = '⏳ Mendeteksi wajah...';
+              _status = 'Mendeteksi wajah...';
             }
           });
         }
       } catch (e) {
-        // Tangani error kamera iOS "Cannot Record"
         if (e.toString().contains("Cannot Record")) {
-          debugPrint('⚠️ Kamera belum siap, skip frame.');
+          debugPrint('Kamera belum siap, skip frame.');
           await Future.delayed(const Duration(milliseconds: 600));
           _verifying = false;
           return;
         }
-        debugPrint('❌ Error capture: $e');
+        debugPrint('Error capture: $e');
         if (mounted) {
           setState(() => _status = 'Terjadi kesalahan kamera');
         }
@@ -151,9 +142,6 @@ class _FaceVerifyLivePageState extends State<FaceVerifyLivePage> {
     super.dispose();
   }
 
-  // ======================================================
-  // 🎨 UI Tampilan Kamera + Status
-  // ======================================================
   @override
   Widget build(BuildContext context) {
     if (_controller == null || !_controller!.value.isInitialized) {
@@ -178,7 +166,6 @@ class _FaceVerifyLivePageState extends State<FaceVerifyLivePage> {
         children: [
           CameraPreview(_controller!),
 
-          // Overlay transparan
           Container(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),

@@ -15,14 +15,13 @@ class AllCategoriesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // palet pastel sama seperti Home Page
     final pastel = [
-      (bg: const Color(0xFFFFE5E5), icon: const Color(0xFFE57373)), // Dokter Umum
-      (bg: const Color(0xFFE3F2FD), icon: const Color(0xFF64B5F6)), // Anak
-      (bg: const Color(0xFFFCE4EC), icon: const Color(0xFFF06292)), // Jantung
-      (bg: const Color(0xFFE8F5E9), icon: const Color(0xFF81C784)), // Kulit
-      (bg: const Color(0xFFFFF8E1), icon: const Color(0xFFFFB74D)), // Mata
-      (bg: const Color(0xFFEDE7F6), icon: const Color(0xFF9575CD)), // Kandungan
+      (bg: const Color(0xFFFFE5E5), icon: const Color(0xFFE57373)), 
+      (bg: const Color(0xFFE3F2FD), icon: const Color(0xFF64B5F6)), 
+      (bg: const Color(0xFFFCE4EC), icon: const Color(0xFFF06292)), 
+      (bg: const Color(0xFFE8F5E9), icon: const Color(0xFF81C784)),
+      (bg: const Color(0xFFFFF8E1), icon: const Color(0xFFFFB74D)), 
+      (bg: const Color(0xFFEDE7F6), icon: const Color(0xFF9575CD)), 
     ];
 
     return Scaffold(
@@ -77,7 +76,7 @@ class AllCategoriesPage extends StatelessWidget {
                     ),
                     itemBuilder: (context, index) {
                       final cat = categories[index];
-                      final pal = pastel[index % pastel.length]; // loop warna pastel
+                      final pal = pastel[index % pastel.length]; 
                       final icon = _getCategoryIcon(cat);
 
                       return _CategoryTile(
@@ -122,7 +121,6 @@ class AllCategoriesPage extends StatelessWidget {
     );
   }
 
-  /// Ikon per spesialis (sama seperti Home Page)
   IconData _getCategoryIcon(String cat) {
     final s = cat.toLowerCase();
     if (s.contains('umum')) return Icons.local_hospital;
@@ -135,7 +133,7 @@ class AllCategoriesPage extends StatelessWidget {
   }
 }
 
-/// ================= TILE SPESIALIS =================
+// SPESIALIS 
 class _CategoryTile extends StatefulWidget {
   final String title;
   final Color colorBg;
