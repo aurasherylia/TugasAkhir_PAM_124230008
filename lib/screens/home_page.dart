@@ -1,4 +1,3 @@
-// lib/screens/home_page.dart
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -6,7 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 
-// OpenStreetMap (flutter_map)
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -39,7 +37,7 @@ class _HomePageState extends State<HomePage> {
   String userCity = 'Loading...';
   int selectedIndex = 0;
 
-  // Posisi efektif: realtime GPS atau manual dari OSM
+
   Position? userPositionRealtime;
   Position? _manualPosition;
   bool _useRealtimeLocation = true;
@@ -50,9 +48,7 @@ class _HomePageState extends State<HomePage> {
   List<String> categories = [];
   Set<int> favorites = {};
 
-  // cache geocoding alamat -> koordinat
   final Map<String, GeoCacheItem> _geoCache = {};
-  // cache jarak doctor.id -> km
   final Map<int, double> _doctorDistanceKm = {};
 
   late final PageController _pageCtrl;
@@ -61,7 +57,6 @@ class _HomePageState extends State<HomePage> {
 
   StreamSubscription<Position>? _posSub;
 
-  // Override timezone lokal halaman ini (opsional)
   AppTimezone? _tzOverride;
 
   @override
@@ -112,19 +107,15 @@ class _HomePageState extends State<HomePage> {
       await SettingsService.instance.load();
       final sp = await SharedPreferences.getInstance();
       username = sp.getString('username') ?? 'User';
-
-      // Inisialisasi lokasi realtime awal
       await _initRealtimeLocation();
 
-      // Data dokter
+
       doctors = await APIService.fetchDoctors();
       categories = doctors.map((d) => d.specialist).toSet().toList();
 
-      // Top dokter by patients
       doctors.sort((a, b) => b.numberOfPatients.compareTo(a.numberOfPatients));
       topDoctors = doctors.take(5).toList();
 
-      // Nearby awal
       await _loadNearbyDoctors();
     } catch (e) {
       error = true;
@@ -132,7 +123,6 @@ class _HomePageState extends State<HomePage> {
     if (mounted) setState(() => loading = false);
   }
 
-  // POSISI EFEKTIF + TZ
   Position? get _effectivePosition =>
       _useRealtimeLocation ? userPositionRealtime : _manualPosition;
 
@@ -141,7 +131,7 @@ class _HomePageState extends State<HomePage> {
     return SettingsService.instance.timezone.value;
   }
 
-  // REALTIME LOCATION (GPS)
+
   Future<void> _initRealtimeLocation() async {
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -163,14 +153,12 @@ class _HomePageState extends State<HomePage> {
         return;
       }
 
-      // Posisi awal
       userPositionRealtime = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.bestForNavigation,
       );
       userCity = await _getCityName(userPositionRealtime!);
       if (mounted) setState(() {});
 
-      // Stream posisi (bergerak >= default distance)
       _posSub?.cancel();
       _posSub = Geolocator.getPositionStream(
         locationSettings: const LocationSettings(
@@ -203,20 +191,18 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // Deteksi zona waktu dari longitude (kasar)
+
   AppTimezone _timezoneFromLongitude(double lon) {
-    if (lon >= 128) return AppTimezone.wit;   // UTC+9
-    if (lon >= 115) return AppTimezone.wita;  // UTC+8
-    if (lon <= 0) return AppTimezone.london;  // UTC+0 untuk Eropa barat
-    return AppTimezone.wib;                   // default Indonesia barat UTC+7
+    if (lon >= 128) return AppTimezone.wit;   
+    if (lon >= 115) return AppTimezone.wita;  
+    if (lon <= 0) return AppTimezone.london;  
+    return AppTimezone.wib;                 
   }
 
-  // NEARBY DOCTORS (pakai _effectivePosition)
   Future<void> _loadNearbyDoctors() async {
     final pos = _effectivePosition;
     if (pos == null || doctors.isEmpty) return;
 
-    // geocoding alamat dokter -> koordinat (cache 1 jam)
     final now = DateTime.now();
     for (final d in doctors) {
       final addr = (d.location).trim();
@@ -234,12 +220,10 @@ class _HomePageState extends State<HomePage> {
           coords = _LatLng(res.first.latitude, res.first.longitude);
           _geoCache[addr] = GeoCacheItem(coords, now);
         } catch (_) {
-          // skip jika gagal geocode
           continue;
         }
       }
 
-      // hitung jarak
       final km = Geolocator.distanceBetween(
             pos.latitude,
             pos.longitude,
@@ -251,7 +235,7 @@ class _HomePageState extends State<HomePage> {
       _doctorDistanceKm[d.id] = km;
     }
 
-    // sortir berdasarkan jarak yang sudah ada
+
     final withDistance = doctors.where((d) => _doctorDistanceKm.containsKey(d.id)).toList();
     withDistance.sort((a, b) => _doctorDistanceKm[a.id]!.compareTo(_doctorDistanceKm[b.id]!));
 
