@@ -184,7 +184,6 @@ class _LoginPageState extends State<LoginPage>
     );
   }
 
-  // Masuk sebagai 3 user terbaru
   Widget _buildSelectUser(BuildContext ctx) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 36),
@@ -285,7 +284,6 @@ class _LoginPageState extends State<LoginPage>
             ),
             const SizedBox(height: 28),
 
-            // Card Form (centered)
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -325,7 +323,7 @@ class _LoginPageState extends State<LoginPage>
                         borderSide: BorderSide(
                           color: kPrimary.withOpacity(
                             0.8,
-                          ), // warna ungu waktu fokus
+                          ), 
                           width: 1.8,
                         ),
                       ),
@@ -371,7 +369,7 @@ class _LoginPageState extends State<LoginPage>
                   ),
                   const SizedBox(height: 20),
 
-                  // Tombol Login dan Face ID
+                  //Face ID
                   Row(
                     children: [
                       Expanded(
@@ -401,7 +399,8 @@ class _LoginPageState extends State<LoginPage>
                       const SizedBox(width: 12),
                       GestureDetector(
                         onTap: () => _loginWithFaceID(ctx),
-                        child: Image.asset(
+                        child: 
+                        Image.asset(
                           'assets/images/faceid.png',
                           width: 64,
                           height: 64,
@@ -420,6 +419,7 @@ class _LoginPageState extends State<LoginPage>
                 const Text(
                   'Belum punya akun? ',
                   style: TextStyle(
+                    backgroundColor: Color.fromARGB(255, 255, 255, 255),
                     color: Color(0xFF7E6BAA),
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
