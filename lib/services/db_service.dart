@@ -18,7 +18,7 @@ class DBService {
 
     _db = await openDatabase(
       path,
-      version: 35, // tingkatkan versi
+      version: 35, 
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -153,7 +153,6 @@ class DBService {
     return res.isNotEmpty ? res.first : null;
   }
 
-  // Ambil user terbaru
   static Future<List<Map<String, dynamic>>> getRecentUsers({int limit = 3}) async {
     final db = await database;
     final users = await db.query(

@@ -1251,7 +1251,7 @@ class _HomePageState extends State<HomePage> {
                             setState(() {
                               _useRealtimeLocation = true;
                               _manualPosition = null;
-                              _tzOverride = null; // pakai setting global
+                              _tzOverride = null; 
                             });
                             await _loadNearbyDoctors();
                             if (mounted) Navigator.pop(ctx);
@@ -1267,7 +1267,7 @@ class _HomePageState extends State<HomePage> {
                           setState(() {
                             _useRealtimeLocation = false;
                             userCity = city;
-                            _tzOverride = tzToUse; // jika null → tetap null (pakai Settings)
+                            _tzOverride = tzToUse; 
                             _tzOverride ??= inferred;
                           });
 
