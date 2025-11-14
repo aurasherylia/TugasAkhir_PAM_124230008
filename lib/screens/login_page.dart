@@ -419,7 +419,6 @@ class _LoginPageState extends State<LoginPage>
                 const Text(
                   'Belum punya akun? ',
                   style: TextStyle(
-                    backgroundColor: Color.fromARGB(255, 255, 255, 255),
                     color: Color(0xFF7E6BAA),
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
